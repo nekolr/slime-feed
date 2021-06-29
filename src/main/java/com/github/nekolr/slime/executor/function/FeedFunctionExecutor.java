@@ -22,14 +22,16 @@ public class FeedFunctionExecutor implements FunctionExecutor {
     @Comment("添加 feed 到数据库中")
     public void add(String guid, String title, String author,
                     String desc, String imgUrl, Date pubDate) {
-        Feed feed = new Feed();
-        feed.setGuid(guid);
-        feed.setTitle(title);
-        feed.setAuthor(author);
-        feed.setDescription(desc);
-        feed.setImgUrl(imgUrl);
-        feed.setPublishDate(pubDate);
-        feedRepository.save(feed);
+        if (!feedRepository.existsByGuid(guid)) {
+            Feed feed = new Feed();
+            feed.setGuid(guid);
+            feed.setTitle(title);
+            feed.setAuthor(author);
+            feed.setDescription(desc);
+            feed.setImgUrl(imgUrl);
+            feed.setPublishDate(pubDate);
+            feedRepository.save(feed);
+        }
     }
 
     @Autowired

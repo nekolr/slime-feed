@@ -13,6 +13,10 @@
     <name>slime-feed</name>
     <url>https://github.com/nekolr/slime-feed</url>
 
+    <properties>
+        <hutool.version>5.7.2</hutool.version>
+    </properties>
+
     <dependencies>
         <!-- slime-api -->
         <dependency>
@@ -34,6 +38,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <!-- hutool -->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-http</artifactId>
+            <version>${hutool.version}</version>
         </dependency>
     </dependencies>
 

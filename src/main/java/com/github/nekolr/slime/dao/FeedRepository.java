@@ -9,5 +9,9 @@ import java.util.List;
 
 public interface FeedRepository extends JpaRepository<Feed, Long>, JpaSpecificationExecutor<Feed> {
 
+    Boolean existsByGuid(String guid);
+
+    List<Feed> findByGuid(String guid);
+
     List<Feed> findByCreateTimeLessThanEqual(Date time);
 }

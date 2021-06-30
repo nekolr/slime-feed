@@ -3,6 +3,7 @@ package com.github.nekolr.slime.executor.node;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.http.Method;
+import com.alibaba.fastjson.JSON;
 import com.github.nekolr.slime.config.FeedConfig;
 import com.github.nekolr.slime.context.SpiderContext;
 import com.github.nekolr.slime.dao.FeedRepository;
@@ -22,7 +23,6 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 机器人消息推送执行器
@@ -30,6 +30,11 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 public class BotMessagePushExecutor implements NodeExecutor {
+
+    /**
+     * 消息的唯一标识
+     */
+    private static final String MESSAGE_GUID = "guid";
 
     /**
      * 推送消息的目标（多个目标以逗号分隔）
@@ -63,6 +68,7 @@ public class BotMessagePushExecutor implements NodeExecutor {
 
     @Override
     public void execute(SpiderNode node, SpiderContext context, Map<String, Object> variables) {
+        String guid = node.getJsonProperty(MESSAGE_GUID);
         String token = node.getJsonProperty(MESSAGE_PUSH_TOKEN);
         String target = node.getJsonProperty(MESSAGE_PUSH_TARGET);
         String messagePushUrl = node.getJsonProperty(MESSAGE_PUSH_URL);
@@ -76,31 +82,58 @@ public class BotMessagePushExecutor implements NodeExecutor {
                 if (!Objects.isNull(tokenObj)) {
                     log.debug("表达式 {} 的结果为 {}", token, tokenObj);
                 }
-                List<Feed> feeds = feedRepository.findByGuid("");
-                HttpRequest request = HttpUtil.createRequest(Method.valueOf(messagePushMethod), messagePushUrl);
+                List<Feed> feeds = feedRepository.findByGuid(guid);
+                if (!feeds.isEmpty()) {
+                    HttpRequest request = HttpUtil.createRequest(Method.valueOf(messagePushMethod), messagePushUrl);
 
-                BotRequestBody requestBody = new BotRequestBody();
-                requestBody.setSessionKey((String) tokenObj);
-                requestBody.setTarget(messagePushTarget);
-                List<Map<String, String>> messageChains = new ArrayList<>(feeds.size());
-                if (feeds.size() > 1) {
-                    List<String> images = feeds.stream().map(feed -> {
-                        String imgPath = StringUtils.replace(feed.getImgUrl(), feedConfig.getPixivHost(), "");
-                        try {
-                            File imgFile = new File(feedConfig.getPixivSavePath() + File.separator + imgPath);
-                            byte[] bytes = FileUtils.readFileToByteArray(imgFile);
-                            return Base64.encodeBase64String(bytes);
-                        } catch (IOException e) {
-                            return null;
-                        }
-                    }).collect(Collectors.toList());
+                    BotRequestBody requestBody = new BotRequestBody();
+                    // 设置请求的 Token
+                    requestBody.setSessionKey((String) tokenObj);
+                    // 设置推送对象
+                    requestBody.setTarget(messagePushTarget);
+                    // 消息链
+                    List<Map<String, String>> messageChains = new ArrayList<>(feeds.size());
+                    // 使用第一个 feed 的内容作为文本消息
+                    Feed firstFeed = feeds.get(0);
+                    Map<String, String> textMessage = new HashMap<>();
+                    textMessage.put("type", "Plain");
+                    textMessage.put("text", firstFeed.getTitle());
+                    messageChains.add(textMessage);
+                    // 构建所有的图片消息
+                    feeds.stream()
+                            .map(feed -> getBase64Image(feed))
+                            .filter(base64Image -> StringUtils.isNotBlank(base64Image))
+                            .forEach(base64Image -> {
+                                Map<String, String> imageMessage = new HashMap<>();
+                                imageMessage.put("type", "Image");
+                                imageMessage.put("base64", base64Image);
+                                messageChains.add(imageMessage);
+                            });
+                    // 设置消息链
+                    requestBody.setMessageChain(messageChains);
+                    // 设置请求 body
+                    request.body(JSON.toJSONString(requestBody));
+                    // 发起请求
+                    request.execute();
                 }
-                // 发起请求
-                request.execute();
-
             } catch (Throwable t) {
                 log.error("解析表达式 {} 出错", token, t);
             }
+        }
+    }
+
+    /**
+     * 将图片转换成 Base64 编码的文本
+     */
+    private String getBase64Image(Feed feed) {
+        // 去掉域名，只保留图片名称
+        String imgPath = StringUtils.replace(feed.getImgUrl(), feedConfig.getPixivHost(), "");
+        try {
+            File imgFile = new File(feedConfig.getPixivSavePath() + File.separator + imgPath);
+            byte[] bytes = FileUtils.readFileToByteArray(imgFile);
+            return Base64.encodeBase64String(bytes);
+        } catch (IOException e) {
+            return null;
         }
     }
 

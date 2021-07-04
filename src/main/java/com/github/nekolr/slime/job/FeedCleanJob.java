@@ -1,8 +1,8 @@
 package com.github.nekolr.slime.job;
 
 import com.github.nekolr.slime.config.FeedConfig;
-import com.github.nekolr.slime.dao.FeedRepository;
 import com.github.nekolr.slime.domain.Feed;
+import com.github.nekolr.slime.service.FeedService;
 import com.github.nekolr.slime.util.TimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -26,7 +26,7 @@ public class FeedCleanJob {
     private FeedConfig feedConfig;
 
     @Resource
-    private FeedRepository feedRepository;
+    private FeedService feedService;
 
     /**
      * 在使用了 @EnableWebSocket 之后，自动配置类就不会生效，需要手动创建
@@ -56,7 +56,7 @@ public class FeedCleanJob {
     public void clean() {
         log.debug("开始清理过期的 feed");
         Date beforeTime = TimeUtils.getBeforeTime(feedConfig.getCheckTimeBefore());
-        List<Feed> feeds = feedRepository.findByCreateTimeLessThanEqual(beforeTime);
+        List<Feed> feeds = feedService.findByCreateTimeLessThanEqual(beforeTime);
         // 删除对应的文件
         feeds.stream().forEach(feed -> {
             String imgPath = StringUtils.replace(feed.getImgUrl(), feedConfig.getPixivHost(), "");
@@ -66,7 +66,7 @@ public class FeedCleanJob {
             }
         });
         // 批量删除
-        feedRepository.deleteInBatch(feeds);
+        feedService.deleteInBatch(feeds);
         log.debug("清理过期的 feed 完毕");
     }
 }

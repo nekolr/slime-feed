@@ -6,17 +6,18 @@ import cn.hutool.http.Method;
 import com.alibaba.fastjson.JSON;
 import com.github.nekolr.slime.config.FeedConfig;
 import com.github.nekolr.slime.context.SpiderContext;
-import com.github.nekolr.slime.dao.FeedRepository;
 import com.github.nekolr.slime.domain.Feed;
 import com.github.nekolr.slime.entity.BotRequestBody;
 import com.github.nekolr.slime.executor.NodeExecutor;
 import com.github.nekolr.slime.model.Shape;
 import com.github.nekolr.slime.model.SpiderNode;
+import com.github.nekolr.slime.service.FeedService;
 import com.github.nekolr.slime.support.ExpressionParser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -37,11 +38,6 @@ public class BotMessagePushExecutor implements NodeExecutor {
     private static final String MESSAGE_GUID = "guid";
 
     /**
-     * 推送消息的目标（多个目标以逗号分隔）
-     */
-    private static final String MESSAGE_PUSH_TARGET = "target";
-
-    /**
      * 请求的 Token
      */
     private static final String MESSAGE_PUSH_TOKEN = "sessionKey";
@@ -52,15 +48,21 @@ public class BotMessagePushExecutor implements NodeExecutor {
     private static final String MESSAGE_PUSH_URL = "messagePushUrl";
 
     /**
+     * 推送消息的目标（多个目标以逗号分隔）
+     */
+    private static final String MESSAGE_PUSH_TARGET = "messagePushTarget";
+
+    /**
      * 消息推送的请求方法
      */
     private static final String MESSAGE_PUSH_METHOD = "messagePushMethod";
+
 
     @Resource
     private FeedConfig feedConfig;
 
     @Resource
-    private FeedRepository feedRepository;
+    private FeedService feedService;
 
     @Resource
     private ExpressionParser expressionParser;
@@ -77,12 +79,17 @@ public class BotMessagePushExecutor implements NodeExecutor {
         String[] targets = StringUtils.split(target, ",");
         for (String messagePushTarget : targets) {
             try {
-                // 解析表达式
+                // 解析 token
                 Object tokenObj = expressionParser.parse(token, variables);
                 if (!Objects.isNull(tokenObj)) {
-                    log.debug("表达式 {} 的结果为 {}", token, tokenObj);
+                    log.debug("Token {} 的结果为 {}", token, tokenObj);
                 }
-                List<Feed> feeds = feedRepository.findByGuid(guid);
+                // 解析 Guid
+                Object guidObj = expressionParser.parse(guid, variables);
+                if (!Objects.isNull(tokenObj)) {
+                    log.debug("Guid {} 的结果为 {}", guid, guidObj);
+                }
+                List<Feed> feeds = feedService.findByGuidAndPushed((String) guidObj, Boolean.FALSE);
                 if (!feeds.isEmpty()) {
                     HttpRequest request = HttpUtil.createRequest(Method.valueOf(messagePushMethod), messagePushUrl);
 
@@ -93,22 +100,8 @@ public class BotMessagePushExecutor implements NodeExecutor {
                     requestBody.setTarget(messagePushTarget);
                     // 消息链
                     List<Map<String, String>> messageChains = new ArrayList<>(feeds.size());
-                    // 使用第一个 feed 的内容作为文本消息
-                    Feed firstFeed = feeds.get(0);
-                    Map<String, String> textMessage = new HashMap<>();
-                    textMessage.put("type", "Plain");
-                    textMessage.put("text", firstFeed.getTitle());
-                    messageChains.add(textMessage);
-                    // 构建所有的图片消息
-                    feeds.stream()
-                            .map(feed -> getBase64Image(feed))
-                            .filter(base64Image -> StringUtils.isNotBlank(base64Image))
-                            .forEach(base64Image -> {
-                                Map<String, String> imageMessage = new HashMap<>();
-                                imageMessage.put("type", "Image");
-                                imageMessage.put("base64", base64Image);
-                                messageChains.add(imageMessage);
-                            });
+                    // 填充消息链
+                    this.fillMessageChains(messageChains, feeds);
                     // 设置消息链
                     requestBody.setMessageChain(messageChains);
                     // 设置请求 body
@@ -117,9 +110,42 @@ public class BotMessagePushExecutor implements NodeExecutor {
                     request.execute();
                 }
             } catch (Throwable t) {
-                log.error("解析表达式 {} 出错", token, t);
+                log.error("推送消息出错", t);
             }
         }
+    }
+
+    /**
+     * 填充消息链
+     */
+    private void fillMessageChains(List<Map<String, String>> messageChains, List<Feed> feeds) {
+        // 使用第一个 feed 的内容作为文本消息
+        Feed firstFeed = feeds.get(0);
+        Map<String, String> titleMessage = new HashMap<>();
+        titleMessage.put("type", "Plain");
+        titleMessage.put("text", "标题：" + firstFeed.getTitle());
+        messageChains.add(titleMessage);
+        Map<String, String> authorMessage = new HashMap<>();
+        authorMessage.put("type", "Plain");
+        authorMessage.put("text", "作者：" + firstFeed.getAuthor());
+        messageChains.add(authorMessage);
+        // 构建所有的图片消息
+        for (Feed feed : feeds) {
+            String base64Image = this.getBase64Image(feed);
+            if (StringUtils.isNotBlank(base64Image)) {
+                Map<String, String> imageMessage = new HashMap<>();
+                imageMessage.put("type", "Image");
+                imageMessage.put("base64", base64Image);
+                messageChains.add(imageMessage);
+            }
+            // 默认只要推送过，不管是否成功都算成功（可能会存在漏推的情况，无伤大雅）
+            feed.setPushed(Boolean.TRUE);
+            feedService.save(feed);
+        }
+        Map<String, String> pubDateMessage = new HashMap<>();
+        pubDateMessage.put("type", "Plain");
+        pubDateMessage.put("text", "发布时间：" + DateFormatUtils.format(firstFeed.getPublishDate(), "yyyy-MM-dd HH:mm:ss"));
+        messageChains.add(pubDateMessage);
     }
 
     /**

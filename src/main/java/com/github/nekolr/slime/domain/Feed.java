@@ -65,4 +65,9 @@ public class Feed {
     @Column(name = "create_time", insertable = false, updatable = false)
     @ColumnDefault("CURRENT_TIMESTAMP()")
     private Date createTime;
+
+    /**
+     * 是否推送过
+     */
+    private Boolean pushed;
 }

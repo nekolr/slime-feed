@@ -16,9 +16,9 @@
                     </div>
                     <div class="layui-col-md3">
                         <div class="layui-form-item">
-                            <label class="layui-form-label">消息推送地址</label>
+                            <label class="layui-form-label">Guid</label>
                             <div class="layui-input-block">
-                                <input type="text" name="messagePushUrl" placeholder="请输入消息推送地址" autocomplete="off" class="layui-input input-default" value="{{=d.data.object.messagePushUrl}}">
+                                <div class="layui-input-block" codemirror="guid" placeholder="请输入 Guid" data-value="{{=d.data.object.guid}}"></div>
                             </div>
                         </div>
                     </div>
@@ -36,6 +36,32 @@
                                     <option value="OPTIONS" {{d.data.object.messagePushMethod == 'OPTIONS' ? 'selected':''}}>OPTIONS</option>
                                     <option value="TRACE" {{d.data.object.messagePushMethod == 'TRACE' ? 'selected':''}}>TRACE</option>
                                 </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-row">
+                    <div class="layui-col-md3">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">推送地址</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="messagePushUrl" placeholder="请输入消息推送地址" autocomplete="off" class="layui-input input-default" value="{{=d.data.object.messagePushUrl}}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-col-md3">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">推送目标</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="messagePushTarget" placeholder="请输入消息推送目标" autocomplete="off" class="layui-input input-default" value="{{=d.data.object.messagePushTarget}}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-col-md3">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">SessionKey</label>
+                            <div class="layui-input-block">
+                                <div class="layui-input-block" codemirror="sessionKey" placeholder="请输入 SessionKey" data-value="{{=d.data.object.sessionKey}}"></div>
                             </div>
                         </div>
                     </div>

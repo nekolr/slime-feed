@@ -13,6 +13,7 @@ import com.github.nekolr.slime.model.Shape;
 import com.github.nekolr.slime.model.SpiderNode;
 import com.github.nekolr.slime.service.FeedService;
 import com.github.nekolr.slime.support.ExpressionParser;
+import com.github.nekolr.slime.util.ImageUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
@@ -56,6 +57,11 @@ public class BotMessagePushExecutor implements NodeExecutor {
      * 消息推送的请求方法
      */
     private static final String MESSAGE_PUSH_METHOD = "messagePushMethod";
+
+    /**
+     * 图片最大限制 30 MB
+     */
+    private static final Integer IMAGE_FILE_MAX_SIZE = 30 * 1024 * 1024;
 
 
     @Resource
@@ -156,8 +162,13 @@ public class BotMessagePushExecutor implements NodeExecutor {
         String imgPath = StringUtils.replace(feed.getImgUrl(), feedConfig.getPixivHost(), "");
         try {
             File imgFile = new File(feedConfig.getPixivSavePath() + File.separator + imgPath);
-            byte[] bytes = FileUtils.readFileToByteArray(imgFile);
-            return Base64.encodeBase64String(bytes);
+            if (imgFile.exists() && imgFile.isFile()) {
+                ImageUtils.compressImage(imgFile, IMAGE_FILE_MAX_SIZE, 40 * 1024 * 1024);
+                byte[] bytes = FileUtils.readFileToByteArray(imgFile);
+                return Base64.encodeBase64String(bytes);
+            } else {
+                return null;
+            }
         } catch (IOException e) {
             return null;
         }

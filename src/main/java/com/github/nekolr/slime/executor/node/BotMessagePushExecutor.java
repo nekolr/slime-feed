@@ -15,7 +15,6 @@ import com.github.nekolr.slime.service.FeedService;
 import com.github.nekolr.slime.support.ExpressionParser;
 import com.github.nekolr.slime.util.ImageUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -165,7 +164,7 @@ public class BotMessagePushExecutor implements NodeExecutor {
             if (imgFile.exists() && imgFile.isFile()) {
                 ImageUtils.compressImage(imgFile, IMAGE_FILE_MAX_SIZE, 40 * 1024 * 1024);
                 byte[] bytes = FileUtils.readFileToByteArray(imgFile);
-                return Base64.encodeBase64String(bytes);
+                return Base64.getEncoder().encodeToString(bytes);
             } else {
                 return null;
             }

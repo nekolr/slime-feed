@@ -6,12 +6,12 @@ import java.io.*;
 
 public class ImageUtils {
 
-    public static void compressImage(String image, int ltLimit, int gtLimit) throws IOException {
+    public static void compressImage(String image, long ltLimit, long gtLimit) throws IOException {
         File file = new File(image);
         compressImage(file, ltLimit, gtLimit);
     }
 
-    public static void compressImage(File file, int ltLimit, int gtLimit) throws IOException {
+    public static void compressImage(File file, long ltLimit, long gtLimit) throws IOException {
         if (file.length() > ltLimit && file.length() < gtLimit) {
             compressImage(new FileInputStream(file), file, 0.95f, 1.0f);
         } else if (file.length() > gtLimit) {

@@ -57,11 +57,6 @@ public class BotMessagePushExecutor implements NodeExecutor {
      */
     private static final String MESSAGE_PUSH_METHOD = "messagePushMethod";
 
-    /**
-     * 图片最大限制 30 MB
-     */
-    private static final Integer IMAGE_FILE_MAX_SIZE = 30 * 1024 * 1024;
-
 
     @Resource
     private FeedConfig feedConfig;
@@ -162,7 +157,7 @@ public class BotMessagePushExecutor implements NodeExecutor {
         try {
             File imgFile = new File(feedConfig.getPixivSavePath() + File.separator + imgPath);
             if (imgFile.exists() && imgFile.isFile()) {
-                ImageUtils.compressImage(imgFile, IMAGE_FILE_MAX_SIZE, 40 * 1024 * 1024);
+                ImageUtils.compressImage(imgFile, feedConfig.getImageFileMaxSize().toBytes(), 30 * 1024 * 1024);
                 byte[] bytes = FileUtils.readFileToByteArray(imgFile);
                 return Base64.getEncoder().encodeToString(bytes);
             } else {

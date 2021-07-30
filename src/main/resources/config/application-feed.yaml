@@ -9,4 +9,4 @@ feed:
   # 清理多长时间之前的 feed
   check-time-before: 3d
   # 图片文件大小限制
-  image-file-max-size: 20MB
+  image-file-max-size: 10MB

@@ -204,8 +204,14 @@ public class BotMessagePushExecutor implements NodeExecutor {
         else if (MessageOutputType.MERGE.getCode().equals(Integer.valueOf(messageOutputType))) {
             Map<String, String> titleMessage = new HashMap<>();
             titleMessage.put("type", "Plain");
-            String message = feeds.stream().map(Feed::getTitle).collect(Collectors.joining("\r\n"));
-            titleMessage.put("text", message);
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < feeds.size(); i++) {
+                sb.append(i + 1);
+                sb.append(". ");
+                sb.append(feeds.get(i).getTitle());
+                sb.append("\r\n");
+            }
+            titleMessage.put("text", sb.toString());
             messageChains.add(titleMessage);
             feeds.stream().forEach(feed -> {
                 feed.setPushed(Boolean.TRUE);

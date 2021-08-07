@@ -59,10 +59,12 @@ public class FeedCleanJob {
         List<Feed> feeds = feedService.findByCreateTimeLessThanEqual(beforeTime);
         // 删除对应的文件
         feeds.stream().forEach(feed -> {
-            String imgPath = StringUtils.replace(feed.getImgUrl(), feedConfig.getPixivHost(), "");
-            File file = new File(feedConfig.getPixivSavePath() + File.separator + imgPath);
-            if (file.exists()) {
-                file.delete();
+            if (StringUtils.isNotBlank(feed.getImgUrl())) {
+                String imgPath = StringUtils.replace(feed.getImgUrl(), feedConfig.getPixivHost(), "");
+                File file = new File(feedConfig.getPixivSavePath() + File.separator + imgPath);
+                if (file.exists()) {
+                    file.delete();
+                }
             }
         });
         // 批量删除

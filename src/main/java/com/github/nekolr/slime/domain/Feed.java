@@ -70,4 +70,9 @@ public class Feed {
      * 是否推送过
      */
     private Boolean pushed;
+
+    /**
+     * 分类
+     */
+    private String category;
 }

@@ -13,5 +13,7 @@ public interface FeedService extends BaseService<Feed> {
 
     List<Feed> findByGuidAndPushed(String guid, Boolean pushed);
 
+    List<Feed> findByCategoryAndPushed(String group, Boolean pushed);
+
     List<Feed> findByCreateTimeLessThanEqual(Date time);
 }

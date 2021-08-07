@@ -39,19 +39,28 @@ public class FeedFunctionExecutor implements FunctionExecutor {
                         }
                     }
                     if (!matched) {
-                        saveFeed(guid, title, author, desc, imgUrl, pubDate);
+                        saveFeed(guid, title, author, desc, imgUrl, pubDate, null);
                     }
                 });
             }
         } else {
             if (!Objects.isNull(imgUrls) && !imgUrls.isEmpty()) {
-                imgUrls.stream().forEach(imgUrl -> saveFeed(guid, title, author, desc, imgUrl, pubDate));
+                imgUrls.stream().forEach(imgUrl -> saveFeed(guid, title, author, desc, imgUrl, pubDate, null));
             }
         }
     }
 
+    @Comment("添加 feed 到数据库中")
+    public static void add(String guid, String title, String author, String desc, Date pubDate, String category) {
+        boolean exists = feedService.existsByGuid(guid);
+        if (!exists) {
+            saveFeed(guid, title, author, desc, null, pubDate, category);
+        }
+    }
+
     private static void saveFeed(String guid, String title, String author,
-                                 String desc, String imgUrl, Date pubDate) {
+                                 String desc, String imgUrl, Date pubDate,
+                                 String category) {
         Feed feed = new Feed();
         feed.setGuid(guid);
         feed.setTitle(title);
@@ -60,6 +69,7 @@ public class FeedFunctionExecutor implements FunctionExecutor {
         feed.setImgUrl(imgUrl);
         feed.setPublishDate(pubDate);
         feed.setPushed(Boolean.FALSE);
+        feed.setCategory(category);
         feedService.save(feed);
     }
 

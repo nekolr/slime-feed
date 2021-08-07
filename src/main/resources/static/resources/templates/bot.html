@@ -66,6 +66,25 @@
                         </div>
                     </div>
                 </div>
+                <div class="layui-row">
+                    <div class="layui-col-md3">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">分组</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="category" placeholder="请输入消息推送分组" autocomplete="off" class="layui-input input-default" value="{{=d.data.object.category}}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-col-md3">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">消息输出</label>
+                            <select name="messageOutputType">
+                                <option value="0" {{d.data.object.messageOutputType == '0' ? 'selected': ''}}>单条输出</option>
+                                <option value="1" {{d.data.object.messageOutputType == '1' ? 'selected': ''}}>整合输出</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
             </form>
         </div>
     </div>

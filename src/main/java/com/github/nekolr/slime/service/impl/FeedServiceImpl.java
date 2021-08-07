@@ -32,6 +32,11 @@ public class FeedServiceImpl implements FeedService {
     }
 
     @Override
+    public List<Feed> findByCategoryAndPushed(String category, Boolean pushed) {
+        return feedRepository.findByCategoryAndPushed(category, pushed);
+    }
+
+    @Override
     public List<Feed> findByCreateTimeLessThanEqual(Date time) {
         return feedRepository.findByCreateTimeLessThanEqual(time);
     }

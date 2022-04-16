@@ -3,7 +3,7 @@ feed:
     # pixiv 图片保存的路径
     save-path: ${user.home}/slime/pixiv
     # pixiv 图片服务域名地址
-    host: https://pixiv.cat/
+    host: https://i.pixiv.cat/
   # feed 清理任务执行间隔
   check-interval: 6h
   # 清理多长时间之前的 feed
